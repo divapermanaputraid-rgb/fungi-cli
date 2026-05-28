@@ -1,33 +1,42 @@
-import { Command } from "commander";
-import { loadFungiConfig } from "../../config/loader.js";
-import { createProviderRouter } from "../../providers/router.js";
-import { ModelProfile } from "../../providers/types.js";
+import { Command } from 'commander';
+import { loadFungiConfig } from '../../config/loader';
+import { createProviderRouter } from '../../providers/router';
+import type { ModelProfile, ProviderId } from '../../providers/types';
 
-export const chatCommand = new Command("chat")
-  .description("Send a one-off message to the active fast/smart model")
-  .argument("<message>", "The message to send")
-  .option("-p, --profile <profile>", "Model profile to use (fast, smart, coder, planner, reviewer)", "fast")
-  .action(async (message: string, options) => {
+export const chatCommand = new Command('chat')
+  .description('Start a chat session or send a single prompt')
+  .argument('[prompt]', 'The prompt to send to the model')
+  .option('-p, --profile <profile>', 'Model profile to use', 'fast')
+  .option('--provider <provider>', 'Override default provider')
+  .action(async (prompt: string | undefined, options) => {
     try {
       const config = await loadFungiConfig(process.cwd());
       const router = createProviderRouter(config);
-      
+
       const profile = options.profile as ModelProfile;
-      console.log(`Sending message using profile: ${profile}...`);
-      
-      const response = await router.chatWithProfile({
-        profile,
-        messages: [{ role: "user", content: message }],
-      });
-      
-      console.log("\n=== Response ===");
-      console.log(response.content);
-      
-      if (response.usage) {
-        console.log(`\n(Usage: ${response.usage.totalTokens || 0} tokens)`);
+      const providerId = options.provider as ProviderId | undefined;
+
+      if (prompt) {
+        // Single prompt mode
+        console.log('Thinking...');
+        const response = await router.chatWithProfile({
+          profile,
+          providerId,
+          messages: [{ role: 'user', content: prompt }]
+        });
+        
+        console.log('\nResponse:');
+        console.log(response.content);
+        if (response.usage) {
+          console.log(`\n[Usage: In ${response.usage.inputTokens} | Out ${response.usage.outputTokens} | Total ${response.usage.totalTokens}]`);
+        }
+      } else {
+        // Interactive mode (stub for now, just print a message)
+        console.log('Interactive chat mode is coming in a future sprint.');
+        console.log('For now, use: fungi chat "your prompt here"');
       }
-    } catch (error: any) {
-      console.error(`Error: ${error.message}`);
+    } catch (err: any) {
+      console.error(err.message);
       process.exit(1);
     }
   });

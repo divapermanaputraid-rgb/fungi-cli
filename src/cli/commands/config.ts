@@ -1,51 +1,56 @@
-import { Command } from "commander";
-import { loadFungiConfig, saveFungiConfig } from "../../config/loader.js";
-import { ProviderId, ModelProfile } from "../../providers/types.js";
+import { Command } from 'commander';
+import { loadFungiConfig, saveFungiConfig } from '../../config/loader';
+import type { ModelProfile } from '../../providers/types';
 
-export const configCommand = new Command("config")
-  .description("Manage FungiCode configuration");
+export const configCommand = new Command('config')
+  .description('Manage FungiCode configuration')
+  .action(() => {
+    configCommand.help();
+  });
 
 configCommand
-  .command("get")
-  .description("Print current configuration")
+  .command('get')
+  .description('View current configuration')
   .action(async () => {
     try {
       const config = await loadFungiConfig(process.cwd());
       console.log(JSON.stringify(config, null, 2));
-    } catch (error: any) {
-      console.error(error.message);
+    } catch (err: any) {
+      console.error(err.message);
       process.exit(1);
     }
   });
 
 configCommand
-  .command("set <key> <value>")
-  .description("Set a configuration value. Examples: 'provider nine-router', 'model.coder deepseek/deepseek-coder'")
+  .command('set <key> <value>')
+  .description('Set a configuration value (e.g., provider, model.<profile>)')
   .action(async (key: string, value: string) => {
     try {
       const config = await loadFungiConfig(process.cwd());
 
-      if (key === "provider") {
-        const validProviders: ProviderId[] = ["nine-router", "openai-compatible", "gemini", "deepseek"];
-        if (!validProviders.includes(value as ProviderId)) {
-          throw new Error(`Invalid provider '${value}'. Must be one of: ${validProviders.join(", ")}`);
+      if (key === 'provider') {
+        if (!config.providers[value]) {
+          console.error(`Error: Unknown provider '${value}'.`);
+          process.exit(1);
         }
         config.defaultProvider = value;
-      } else if (key.startsWith("model.")) {
-        const profile = key.split(".")[1] as ModelProfile;
-        const validProfiles: ModelProfile[] = ["fast", "smart", "coder", "planner", "reviewer"];
+      } else if (key.startsWith('model.')) {
+        const profile = key.split('.')[1] as ModelProfile;
+        const validProfiles: ModelProfile[] = ['fast', 'smart', 'coder', 'planner', 'reviewer'];
         if (!validProfiles.includes(profile)) {
-          throw new Error(`Invalid model profile '${profile}'. Must be one of: ${validProfiles.join(", ")}`);
+          console.error(`Error: Unknown model profile '${profile}'. Valid profiles are: ${validProfiles.join(', ')}`);
+          process.exit(1);
         }
         config.models[profile] = value;
       } else {
-        throw new Error(`Invalid config key '${key}'. Supported keys: 'provider', 'model.<profile>'`);
+        console.error(`Error: Unsupported config key '${key}'. Supported keys are 'provider' and 'model.<profile>'.`);
+        process.exit(1);
       }
 
       await saveFungiConfig(process.cwd(), config);
       console.log(`Successfully set ${key} to ${value}`);
-    } catch (error: any) {
-      console.error(`Error: ${error.message}`);
+    } catch (err: any) {
+      console.error(err.message);
       process.exit(1);
     }
   });

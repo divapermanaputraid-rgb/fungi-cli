@@ -1,60 +1,53 @@
-import { Command } from "commander";
-import fs from "node:fs/promises";
-import path from "node:path";
-import { createDefaultConfig, saveFungiConfig } from "../../config/loader.js";
+import { Command } from 'commander';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createDefaultConfig } from '../../config/loader';
 
-export const initCommand = new Command("init")
-  .description("Initialize FungiCode in the current directory")
-  .option("-f, --force", "Overwrite existing configuration")
+export const initCommand = new Command('init')
+  .description('Initialize FungiCode workspace in the current directory')
+  .option('-f, --force', 'Overwrite existing configuration')
   .action(async (options) => {
     const cwd = process.cwd();
-    const configDir = path.join(cwd, ".fungi");
-    const configPath = path.join(configDir, "config.json");
-
+    const fungiDir = path.join(cwd, '.fungi');
+    
     try {
-      if (!options.force) {
-        try {
-          await fs.access(configPath);
-          console.error(`Error: Configuration already exists at ${configPath}`);
-          console.error("Use --force to overwrite.");
-          process.exit(1);
-        } catch {
-          // File does not exist, safe to proceed
+      await fs.mkdir(fungiDir, { recursive: true });
+      await fs.mkdir(path.join(fungiDir, 'sessions'), { recursive: true });
+      await fs.mkdir(path.join(fungiDir, 'cache'), { recursive: true });
+
+      const memoryPath = path.join(fungiDir, 'MEMORY.md');
+      try {
+        await fs.access(memoryPath);
+        if (options.force) {
+          await fs.writeFile(memoryPath, '# FungiCode Memory\n\nProject context and knowledge.\n', 'utf-8');
         }
+      } catch {
+        await fs.writeFile(memoryPath, '# FungiCode Memory\n\nProject context and knowledge.\n', 'utf-8');
       }
 
-      console.log(`Initializing FungiCode in ${cwd}...`);
-      
-      const defaultConfig = createDefaultConfig();
-      await saveFungiConfig(cwd, defaultConfig);
+      const configPath = path.join(fungiDir, 'config.json');
+      let shouldWriteConfig = true;
+      try {
+        await fs.access(configPath);
+        if (!options.force) {
+          shouldWriteConfig = false;
+        }
+      } catch {
+        // file doesn't exist, proceed with writing
+      }
 
-      // Create sessions and cache directories
-      await fs.mkdir(path.join(configDir, "sessions"), { recursive: true });
-      await fs.mkdir(path.join(configDir, "cache"), { recursive: true });
+      if (shouldWriteConfig) {
+        const config = createDefaultConfig();
+        await fs.writeFile(configPath, JSON.stringify(config, null, 2), 'utf-8');
+      }
 
-      // Create default MEMORY.md
-      const memoryContent = `# FungiCode Project Memory
-
-This file stores durable project context for FungiCode.
-
-Rules:
-- Do not store secrets.
-- Do not store API keys.
-- Store technical decisions, project conventions, and architectural notes.
-- Keep this file concise.
-`;
-      await fs.writeFile(path.join(configDir, "MEMORY.md"), memoryContent, "utf-8");
-
-      console.log("\nSuccessfully initialized FungiCode!");
-      console.log(`Created configuration at ${configPath}`);
-      console.log("\nNext steps:");
-      console.log("1. View current models: fungi models");
-      console.log("2. Set a provider: fungi config set provider <provider-id>");
-      console.log("3. Set a model: fungi config set model.fast <model-id>");
-      console.log("4. Try a chat: fungi chat \"hello world\"");
-      
-    } catch (error: any) {
-      console.error(`Failed to initialize FungiCode: ${error.message}`);
+      if (!shouldWriteConfig) {
+        console.log('Initialization skipped for config.json (already exists). Use --force to overwrite.');
+      } else {
+        console.log('Successfully initialized FungiCode workspace.');
+      }
+    } catch (err: any) {
+      console.error(`Initialization failed: ${err.message}`);
       process.exit(1);
     }
   });
