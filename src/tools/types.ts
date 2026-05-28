@@ -1,7 +1,7 @@
 export type ToolRiskLevel = "low" | "medium" | "high";
 export type RiskLevel = ToolRiskLevel;
 
-export type Tool<Input = unknown> = ToolDefinition<Input>;
+export type Tool<Input = any> = ToolDefinition<Input>;
 export type ToolInput = Record<string, unknown>;
 
 export interface ToolContext {
@@ -14,11 +14,12 @@ export interface ToolResult {
   metadata?: Record<string, unknown>;
 }
 
-export interface ToolDefinition<Input = unknown> {
+export interface ToolDefinition<Input = any> {
   name: string;
   description: string;
   riskLevel: ToolRiskLevel;
   isReadOnly: boolean;
   inputSchemaDescription: string;
+  validate?(input: Input, context: ToolContext): ToolResult | null;
   execute(input: Input, context: ToolContext): Promise<ToolResult>;
 }

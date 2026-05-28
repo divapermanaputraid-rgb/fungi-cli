@@ -3,6 +3,8 @@ import { fileReadTool } from "./file-read.js";
 import { globTool } from "./glob.js";
 import { grepTool } from "./grep.js";
 import { gitDiffTool } from "./git-diff.js";
+import { fileWriteTool } from "./file-write.js";
+import { fileEditTool } from "./file-edit.js";
 
 export class ToolRegistry {
   private tools: Map<string, ToolDefinition> = new Map();
@@ -41,5 +43,7 @@ export function createDefaultToolRegistry(): ToolRegistry {
   registry.register(globTool);
   registry.register(grepTool);
   registry.register(gitDiffTool);
+  registry.register(fileWriteTool);
+  registry.register(fileEditTool);
   return registry;
 }
