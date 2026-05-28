@@ -13,7 +13,6 @@ src/**/*.map
 tests/
 
 # Reference folders
-internal-dev-notes/
 
 # Dev config
 .vscode/
@@ -25,10 +24,9 @@ tsconfig.json
 scripts/
 
 # Docs source (shipped separately)
-docs/
 
 # Logs
 *.log
 
 # OS
-.DS_Store
+.DS_Storeclaude-leaks/

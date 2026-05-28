@@ -5,6 +5,7 @@ import { grepTool } from "./grep.js";
 import { gitDiffTool } from "./git-diff.js";
 import { fileWriteTool } from "./file-write.js";
 import { fileEditTool } from "./file-edit.js";
+import { shellTool } from "./shell.js";
 
 export class ToolRegistry {
   private tools: Map<string, ToolDefinition> = new Map();
@@ -45,5 +46,6 @@ export function createDefaultToolRegistry(): ToolRegistry {
   registry.register(gitDiffTool);
   registry.register(fileWriteTool);
   registry.register(fileEditTool);
+  registry.register(shellTool);
   return registry;
 }
