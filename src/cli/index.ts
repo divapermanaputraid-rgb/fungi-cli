@@ -8,6 +8,7 @@ import { codeCommand }   from "./commands/code.js";
 import { reviewCommand } from "./commands/review.js";
 import { configCommand } from "./commands/config.js";
 import { modelsCommand } from "./commands/models.js";
+import { toolsCommand } from "./commands/tools.js";
 
 const program = new Command();
 
@@ -23,5 +24,6 @@ program.addCommand(codeCommand());
 program.addCommand(reviewCommand());
 program.addCommand(configCommand);
 program.addCommand(modelsCommand);
+program.addCommand(toolsCommand);
 
 program.parse(process.argv);
