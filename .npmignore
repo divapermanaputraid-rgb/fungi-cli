@@ -1,0 +1,34 @@
+# Source maps
+*.map
+src/**/*.map
+
+# Secrets
+.env
+.env.*
+
+# Fungi local state
+.fungi/
+
+# Tests
+tests/
+
+# Reference folders
+internal-dev-notes/
+
+# Dev config
+.vscode/
+.idea/
+tsconfig.json
+*.tsbuildinfo
+
+# Scripts (internal)
+scripts/
+
+# Docs source (shipped separately)
+docs/
+
+# Logs
+*.log
+
+# OS
+.DS_Store

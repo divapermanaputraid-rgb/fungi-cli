@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+.npmrc
+.pypirc
+
+# Local Fungi state
+.fungi/sessions/
+.fungi/cache/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Package tarballs
+*.tgz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Reference folders (local only, never commit)
+../internal-dev-notes/
