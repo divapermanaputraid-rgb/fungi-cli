@@ -39,9 +39,4 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Reference folders (local only, never commit)
-../internal-dev-notes/
 
-docs/
-
-docs/
