@@ -1,6 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { FungiConfigSchema, FungiConfig, ResolvedProviderConfig } from './schema';
+import { FungiConfigSchema, FungiConfig, ResolvedProviderConfig, DEFAULT_PROVIDER_CONFIGS } from './schema';
 import type { ProviderId, ModelProfile } from '../providers/types';
 
 const CONFIG_DIR = '.fungi';
@@ -41,7 +41,8 @@ export function resolveModelProfile(config: FungiConfig, profile: ModelProfile):
 
 export function resolveProviderConfig(config: FungiConfig, providerId?: ProviderId): ResolvedProviderConfig {
   const id = providerId || config.defaultProvider;
-  const providerConfig = config.providers[id];
+  const mergedProviders = { ...DEFAULT_PROVIDER_CONFIGS, ...(config.providers ?? {}) };
+  const providerConfig = mergedProviders[id];
   if (!providerConfig) {
     throw new Error(`Provider '${id}' is not configured.`);
   }

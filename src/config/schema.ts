@@ -24,24 +24,15 @@ export const FungiConfigSchema = z.object({
   permissions: z.object({
     mode: z.enum(['ask', 'auto-low-risk', 'yolo']).default('ask'),
   }).default({ mode: 'ask' }),
-  providers: z.record(z.string(), ProviderConfigSchema).default({
-    'nine-router': {
-      baseUrl: 'https://openrouter.ai/api/v1',
-      apiKeyEnv: 'NINE_ROUTER_API_KEY',
-    },
-    'openai-compatible': {
-      baseUrl: '',
-      apiKeyEnv: 'OPENAI_API_KEY',
-    },
-    'gemini': {
-      apiKeyEnv: 'GEMINI_API_KEY',
-    },
-    'deepseek': {
-      baseUrl: 'https://api.deepseek.com',
-      apiKeyEnv: 'DEEPSEEK_API_KEY',
-    },
-  }),
+  providers: z.record(z.string(), ProviderConfigSchema).optional(),
 });
+
+export const DEFAULT_PROVIDER_CONFIGS: Record<string, ResolvedProviderConfig> = {
+  "nine-router": { baseUrl: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_API_KEY" },
+  "openai-compatible": { baseUrl: "", apiKeyEnv: "OPENAI_API_KEY" },
+  "gemini": { apiKeyEnv: "GEMINI_API_KEY" },
+  "deepseek": { baseUrl: "https://api.deepseek.com", apiKeyEnv: "DEEPSEEK_API_KEY" },
+};
 
 export type FungiConfig = z.infer<typeof FungiConfigSchema>;
 export type ResolvedProviderConfig = z.infer<typeof ProviderConfigSchema>;

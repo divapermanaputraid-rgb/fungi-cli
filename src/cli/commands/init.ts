@@ -15,14 +15,25 @@ export const initCommand = new Command('init')
       await fs.mkdir(path.join(fungiDir, 'sessions'), { recursive: true });
       await fs.mkdir(path.join(fungiDir, 'cache'), { recursive: true });
 
+      const memoryContent = `# FungiCode Project Memory
+
+This file stores durable project context for FungiCode.
+
+Rules:
+- Do not store secrets.
+- Do not store API keys.
+- Store technical decisions, project conventions, and architectural notes.
+- Keep this file concise.
+`;
+
       const memoryPath = path.join(fungiDir, 'MEMORY.md');
       try {
         await fs.access(memoryPath);
         if (options.force) {
-          await fs.writeFile(memoryPath, '# FungiCode Memory\n\nProject context and knowledge.\n', 'utf-8');
+          await fs.writeFile(memoryPath, memoryContent, 'utf-8');
         }
       } catch {
-        await fs.writeFile(memoryPath, '# FungiCode Memory\n\nProject context and knowledge.\n', 'utf-8');
+        await fs.writeFile(memoryPath, memoryContent, 'utf-8');
       }
 
       const configPath = path.join(fungiDir, 'config.json');

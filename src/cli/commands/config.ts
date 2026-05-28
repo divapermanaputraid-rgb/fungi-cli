@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 import { loadFungiConfig, saveFungiConfig } from '../../config/loader';
+import { DEFAULT_PROVIDER_CONFIGS } from '../../config/schema';
 import type { ModelProfile } from '../../providers/types';
 
 export const configCommand = new Command('config')
@@ -29,7 +30,8 @@ configCommand
       const config = await loadFungiConfig(process.cwd());
 
       if (key === 'provider') {
-        if (!config.providers[value]) {
+        const mergedProviders = { ...DEFAULT_PROVIDER_CONFIGS, ...(config.providers ?? {}) };
+        if (!mergedProviders[value]) {
           console.error(`Error: Unknown provider '${value}'.`);
           process.exit(1);
         }
