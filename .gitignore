@@ -40,5 +40,6 @@ Thumbs.db
 .idea/
 
 # Safety
-../claude-leaks/
-../internal-dev-notes/
+
+# Local Needle state
+.needle/
