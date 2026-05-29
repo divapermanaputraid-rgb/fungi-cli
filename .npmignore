@@ -29,4 +29,8 @@ scripts/
 *.log
 
 # OS
-.DS_Storeclaude-leaks/
+.DS_Store
+
+# Safety
+claude-leaks/
+internal-dev-notes/
