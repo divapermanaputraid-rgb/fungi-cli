@@ -39,6 +39,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-
-
-.fungi/
+# Safety
+../claude-leaks/
+../internal-dev-notes/
