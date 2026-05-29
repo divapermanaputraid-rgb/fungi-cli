@@ -6,7 +6,7 @@ export const ProviderConfigSchema = z.object({
   apiKeyEnv: z.string(),
 });
 
-export const FungiConfigSchema = z.object({
+export const NeedleConfigSchema = z.object({
   defaultProvider: z.string().default('nine-router'),
   models: z.object({
     fast: z.string().default(''),
@@ -34,6 +34,6 @@ export const DEFAULT_PROVIDER_CONFIGS: Record<string, ResolvedProviderConfig> = 
   "deepseek": { baseUrl: "https://api.deepseek.com", apiKeyEnv: "DEEPSEEK_API_KEY" },
 };
 
-export type FungiConfig = z.infer<typeof FungiConfigSchema>;
+export type NeedleConfig = z.infer<typeof NeedleConfigSchema>;
 export type ResolvedProviderConfig = z.infer<typeof ProviderConfigSchema>;
-export type PermissionMode = FungiConfig['permissions']['mode'];
+export type PermissionMode = NeedleConfig['permissions']['mode'];

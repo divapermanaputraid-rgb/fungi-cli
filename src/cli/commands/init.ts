@@ -4,20 +4,20 @@ import path from 'node:path';
 import { createDefaultConfig } from '../../config/loader';
 
 export const initCommand = new Command('init')
-  .description('Initialize FungiCode workspace in the current directory')
+  .description('Initialize Needle workspace in the current directory')
   .option('-f, --force', 'Overwrite existing configuration')
   .action(async (options) => {
     const cwd = process.cwd();
-    const fungiDir = path.join(cwd, '.fungi');
+    const needleDir = path.join(cwd, '.needle');
     
     try {
-      await fs.mkdir(fungiDir, { recursive: true });
-      await fs.mkdir(path.join(fungiDir, 'sessions'), { recursive: true });
-      await fs.mkdir(path.join(fungiDir, 'cache'), { recursive: true });
+      await fs.mkdir(needleDir, { recursive: true });
+      await fs.mkdir(path.join(needleDir, 'sessions'), { recursive: true });
+      await fs.mkdir(path.join(needleDir, 'cache'), { recursive: true });
 
-      const memoryContent = `# FungiCode Project Memory
+      const memoryContent = `# Needle Project Memory
 
-This file stores durable project context for FungiCode.
+This file stores durable project context for Needle.
 
 Rules:
 - Do not store secrets.
@@ -26,7 +26,7 @@ Rules:
 - Keep this file concise.
 `;
 
-      const memoryPath = path.join(fungiDir, 'MEMORY.md');
+      const memoryPath = path.join(needleDir, 'MEMORY.md');
       try {
         await fs.access(memoryPath);
         if (options.force) {
@@ -36,7 +36,7 @@ Rules:
         await fs.writeFile(memoryPath, memoryContent, 'utf-8');
       }
 
-      const configPath = path.join(fungiDir, 'config.json');
+      const configPath = path.join(needleDir, 'config.json');
       let shouldWriteConfig = true;
       try {
         await fs.access(configPath);
@@ -55,7 +55,7 @@ Rules:
       if (!shouldWriteConfig) {
         console.log('Initialization skipped for config.json (already exists). Use --force to overwrite.');
       } else {
-        console.log('Successfully initialized FungiCode workspace.');
+        console.log('Successfully initialized Needle workspace.');
       }
     } catch (err: any) {
       console.error(`Initialization failed: ${err.message}`);

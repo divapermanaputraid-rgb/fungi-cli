@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// FungiCode CLI entry point — Sprint 0
+// Needle CLI entry point — Sprint 0
 import { Command } from "commander";
 import { initCommand }   from "./commands/init.js";
 import { chatCommand }   from "./commands/chat.js";
@@ -13,8 +13,8 @@ import { toolsCommand } from "./commands/tools.js";
 const program = new Command();
 
 program
-  .name("fungi")
-  .description("FungiCode — open-source, multi-provider AI coding CLI")
+  .name("needle")
+  .description("Needle — open-source, multi-provider AI coding CLI")
   .version("0.1.0");
 
 program.addCommand(initCommand);
