@@ -1,11 +1,11 @@
-# FungiCode Config Draft
+# Needle Config Draft
 
 ## Project Config
 
 Location:
 
 ```txt
-.fungi/config.json
+.needle/config.json
 ```
 
 Example:
@@ -31,7 +31,7 @@ Example:
   },
   "memory": {
     "enabled": true,
-    "path": ".fungi/MEMORY.md"
+    "path": ".needle/MEMORY.md"
   }
 }
 ```
@@ -41,7 +41,7 @@ Example:
 Location:
 
 ```txt
-~/.fungi/config.json
+~/.needle/config.json
 ```
 
 Example:

@@ -6,8 +6,8 @@ src/**/*.map
 .env
 .env.*
 
-# Fungi local state
-.fungi/
+# Needle local state
+.needle/
 
 # Tests
 tests/

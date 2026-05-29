@@ -1,4 +1,4 @@
-# FungiCode Roadmap
+# Needle Roadmap
 
 ## Sprint 0: Bootstrap (Current)
 - Workspace and repository skeleton.

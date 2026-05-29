@@ -1,7 +1,7 @@
-# FungiCode Product Requirements Document (PRD)
+# Needle Product Requirements Document (PRD)
 
 ## Vision
-FungiCode is an open-source, multi-provider AI coding CLI inspired by modern agentic coding assistants and terminal-first developer workflows.
+Needle is an open-source, multi-provider AI coding CLI inspired by modern agentic coding assistants and terminal-first developer workflows.
 
 ## Target Audience
 - Open-source contributors

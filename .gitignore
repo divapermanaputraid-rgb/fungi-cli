@@ -19,9 +19,9 @@ coverage/
 .npmrc
 .pypirc
 
-# Local Fungi state
-.fungi/sessions/
-.fungi/cache/
+# Local Needle state
+.needle/sessions/
+.needle/cache/
 
 # Logs
 *.log
