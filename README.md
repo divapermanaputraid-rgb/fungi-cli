@@ -1,6 +1,6 @@
-# FungiCode
+# Needle
 
-FungiCode is an open-source, multi-provider AI coding CLI inspired by modern agentic coding assistants and terminal-first developer workflows.
+Needle is an open-source, multi-provider AI coding CLI inspired by modern agentic coding assistants and terminal-first developer workflows.
 
 ## Features
 - Multi-provider AI (DeepSeek, Gemini, OpenAI, etc.)
@@ -10,15 +10,15 @@ FungiCode is an open-source, multi-provider AI coding CLI inspired by modern age
 
 ## Installation
 ```bash
-npm i -g fungi-cli
-fungi init
+npm i -g needle-cli
+needle init
 ```
 
 ## Usage
 ```bash
-fungi chat
-fungi code "Refactor the authentication module"
-fungi review --staged
+needle chat
+needle code "Refactor the authentication module"
+needle review --staged
 ```
 
 ## License
