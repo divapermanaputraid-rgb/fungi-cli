@@ -39,15 +39,24 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
     tools: registry.list()
   });
 
-  const messages: ChatMessage[] = [
-    { role: "system", content: systemPrompt },
-    { role: "user", content: buildAgentUserPrompt(options.task) }
-  ];
-
   const toolCalls: AgentToolCallRecord[] = [];
   let iterations = 0;
   let finalSummary = "";
   let success = false;
+
+  if (isDryRun) {
+    return {
+      ok: true,
+      summary: "Dry run completed. Context and prompt built successfully. Provider execution skipped.",
+      iterations: 0,
+      toolCalls: []
+    };
+  }
+
+  const messages: ChatMessage[] = [
+    { role: "system", content: systemPrompt },
+    { role: "user", content: buildAgentUserPrompt(options.task) }
+  ];
 
   while (iterations < maxIterations) {
     iterations++;
@@ -85,15 +94,6 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
         messages.push({
           role: "user",
           content: `Error: Unknown tool '${toolName}'. Available tools are: ${registry.list().map(t => t.name).join(", ")}`
-        });
-        continue;
-      }
-      
-      if (isDryRun) {
-        toolCalls.push({ tool: toolName, ok: true });
-        messages.push({
-          role: "user",
-          content: `Observation: [DRY RUN] Would execute tool '${toolName}' with input: ${JSON.stringify(toolInput)}`
         });
         continue;
       }

@@ -209,37 +209,10 @@ test("agent loop handles ok:false tool result", async () => {
   assert.equal(result.toolCalls[0].ok, false);
 });
 
-test("dryRun records tool call without executing", async () => {
-  const registry = new ToolRegistry();
-  let executed = false;
-  
-  registry.register({
-    name: "safe-read",
-    description: "reads",
-    riskLevel: "low",
-    isReadOnly: true,
-    inputSchemaDescription: "{}",
-    execute: async () => {
-      executed = true;
-      return { ok: true, output: "read OK" };
-    }
-  });
-
-  let callCount = 0;
+test("dryRun builds context and skips provider execution", async () => {
+  let called = false;
   const providerChat = async (messages: ChatMessage[]): Promise<ChatResponse> => {
-    callCount++;
-    if (callCount === 1) {
-      return {
-        content: JSON.stringify({ type: "tool_call", tool: "safe-read", input: { file: "test.ts" } }),
-        model: "test",
-        provider: "nine-router"
-      };
-    }
-    
-    const lastMsg = messages[messages.length - 1];
-    assert.match(lastMsg.content, /\[DRY RUN\]/);
-    assert.match(lastMsg.content, /test\.ts/);
-    
+    called = true;
     return {
       content: JSON.stringify({ type: "final", summary: "Done" }),
       model: "test",
@@ -252,10 +225,11 @@ test("dryRun records tool call without executing", async () => {
     task: "test",
     providerChat,
     dryRun: true,
-    toolRegistry: registry
+    toolRegistry: new ToolRegistry()
   });
 
   assert.equal(result.ok, true);
-  assert.equal(executed, false); // execution skipped!
-  assert.equal(result.toolCalls[0].ok, true);
+  assert.equal(called, false, "Provider should not be called in dry run mode");
+  assert.equal(result.iterations, 0);
+  assert.match(result.summary, /Dry run completed/);
 });

@@ -5,6 +5,6 @@ export function print(msg: string): void {
 }
 
 export function printHeader(title: string): void {
-  console.log(`\n🍄 Needle — ${title}`);
+  console.log(`\nNeedle — ${title}`);
   console.log("─".repeat(40));
 }

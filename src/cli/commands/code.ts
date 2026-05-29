@@ -47,17 +47,21 @@ export function codeCommand(): Command {
         providerChat
       });
       
-      console.log("\n--- Agent Run Summary ---");
-      console.log(`Success: ${result.ok}`);
-      console.log(`Iterations: ${result.iterations}`);
-      console.log("Summary: ", result.summary);
-      console.log("\nTool Calls:");
-      if (result.toolCalls.length === 0) {
-        console.log("  (none)");
-      } else {
-        result.toolCalls.forEach((call, index) => {
-          console.log(`  ${index + 1}. ${call.tool} [${call.ok ? "OK" : "FAILED"}]`);
-        });
+      console.log(`\n\x1b[36m${"=".repeat(80)}\x1b[0m`);
+      console.log(`\x1b[1mTask Result: ${result.ok ? "\x1b[32mSuccess" : "\x1b[31mFailed"}\x1b[0m`);
+      console.log(`\x1b[36m${"=".repeat(80)}\x1b[0m`);
+      console.log(`\x1b[1mSummary:\x1b[0m\n${result.summary}\n`);
+      console.log(`\x1b[1mStats:\x1b[0m`);
+      console.log(`  - Iterations: ${result.iterations}`);
+      console.log(`  - Tool Calls: ${result.toolCalls.length}`);
+      if (result.toolCalls.length > 0) {
+        for (const call of result.toolCalls) {
+          const status = call.ok ? "\x1b[32mOK\x1b[0m" : "\x1b[31mFAIL\x1b[0m";
+          console.log(`    * ${call.tool} (${status})`);
+        }
       }
+      console.log();
+      
+      process.exit(result.ok ? 0 : 1);
     });
 }
