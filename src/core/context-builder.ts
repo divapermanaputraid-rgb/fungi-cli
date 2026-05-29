@@ -68,9 +68,9 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
     rootFiles: [],
     treeSummary: "",
     safetyNotes: [
-      "Never commit secrets, .env files, or private keys.",
-      "Always verify destructive commands before running.",
-      "Check generated code for security vulnerabilities."
+      "Secrets and environment files are excluded from context.",
+      "Large/generated directories are ignored.",
+      "Git status and diff output are bounded."
     ]
   };
 
@@ -82,11 +82,11 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
     if (rootFiles.includes("pnpm-lock.yaml")) ctx.packageManager = "pnpm";
     else if (rootFiles.includes("package-lock.json")) ctx.packageManager = "npm";
     else if (rootFiles.includes("yarn.lock")) ctx.packageManager = "yarn";
-    else if (rootFiles.includes("bun.lockb")) ctx.packageManager = "bun";
+    else if (rootFiles.includes("bun.lockb") || rootFiles.includes("bun.lock")) ctx.packageManager = "bun";
     
     // Quick tree summary (BFS or DFS, bounded)
     const tree: string[] = [];
-    const maxEntries = options.maxTreeEntries || 100;
+    const maxEntries = options.maxTreeEntries || 120;
     
     async function buildTree(currentPath: string, relativePath: string) {
       if (tree.length >= maxEntries) return;
@@ -116,6 +116,20 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
     }
 
     // Parse package.json
+    let hasNode = false;
+    let hasJS = false;
+    let hasTS = false;
+
+    if (rootFiles.some(f => f.endsWith(".js") || f.endsWith(".mjs") || f.endsWith(".cjs"))) {
+      hasJS = true;
+    }
+    if (rootFiles.includes("package.json") || rootFiles.includes("node_modules")) {
+      hasNode = true;
+    }
+    if (rootFiles.includes("tsconfig.json")) {
+      hasTS = true;
+    }
+
     try {
       const pkgRaw = await fs.readFile(path.join(cwd, "package.json"), "utf8");
       const pkg = JSON.parse(pkgRaw);
@@ -141,27 +155,29 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
       }
 
       // Project type detection based on deps and files
-      if (rootFiles.includes("tsconfig.json") || devDeps.includes("typescript") || deps.includes("typescript")) {
-        ctx.projectType.push("TypeScript");
-      } else {
-        ctx.projectType.push("JavaScript");
+      if (devDeps.includes("typescript") || deps.includes("typescript")) {
+        hasTS = true;
       }
+      
+      hasJS = true; // if package.json exists, it's at least JS
 
       if (deps.includes("react") || devDeps.includes("react")) ctx.projectType.push("React");
-      if (deps.includes("next")) ctx.projectType.push("Next.js");
-      if (deps.includes("express")) ctx.projectType.push("Express");
+      if (deps.includes("next") || devDeps.includes("next")) ctx.projectType.push("Next.js");
+      if (deps.includes("express") || devDeps.includes("express")) ctx.projectType.push("Express");
 
     } catch (err) {
       // ignore package.json read/parse errors
     }
 
-    // Fallback project type detection if package.json missed TS
-    if (ctx.projectType.length === 0) {
-      if (rootFiles.includes("tsconfig.json")) ctx.projectType.push("TypeScript");
+    if (hasNode) ctx.projectType.push("Node.js");
+    if (hasTS) {
+      ctx.projectType.push("TypeScript");
+    } else if (hasJS) {
+      ctx.projectType.push("JavaScript");
     }
 
     // Python / Go / Rust additions for SPRINT_3B context
-    if (rootFiles.includes("requirements.txt") || rootFiles.includes("pyproject.toml") || rootFiles.includes("setup.py")) {
+    if (rootFiles.includes("requirements.txt") || rootFiles.includes("pyproject.toml") || rootFiles.includes("setup.py") || rootFiles.some(f => f.endsWith(".py"))) {
       ctx.projectType.push("Python");
     }
     if (rootFiles.includes("go.mod")) {
@@ -171,12 +187,16 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
       ctx.projectType.push("Rust");
     }
 
+    if (ctx.projectType.length === 0) {
+      ctx.projectType.push("unknown");
+    }
+
     // Parse README.md
     let readmeName = rootFiles.find(f => f.toLowerCase() === "readme.md");
     if (readmeName) {
       try {
         const readmeContent = await fs.readFile(path.join(cwd, readmeName), "utf8");
-        const maxLen = options.maxReadmeBytes || 2000;
+        const maxLen = options.maxReadmeBytes || 8 * 1024;
         ctx.readmeSummary = readmeContent.slice(0, maxLen);
         if (readmeContent.length > maxLen) {
           ctx.readmeSummary += "\n... (truncated)";
@@ -188,7 +208,7 @@ export async function buildProjectContext(options: ContextBuilderOptions): Promi
 
     // Git info
     try {
-      const maxGit = options.maxGitBytes || 2000;
+      const maxGit = options.maxGitBytes || 16 * 1024;
       
       const statusOutput = execSync("git status --short", { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
       ctx.gitStatus = statusOutput.trim().slice(0, maxGit);

@@ -71,12 +71,16 @@ test("suggests typecheck/build/test commands", async () => {
   assert.equal(ctx.suggestedCommands?.typecheck, "pnpm typecheck");
 });
 
-test("ignores node_modules and dist and .env", async () => {
+test("ignores node_modules and dist", async () => {
   const ctx = await buildProjectContext({ cwd: tempDir });
   assert.ok(!ctx.treeSummary.includes("node_modules"));
   assert.ok(!ctx.treeSummary.includes("dist"));
-  assert.ok(!ctx.treeSummary.includes(".env"));
   assert.ok(ctx.treeSummary.includes("package.json"));
+});
+
+test("does not read .env", async () => {
+  const ctx = await buildProjectContext({ cwd: tempDir });
+  assert.ok(!ctx.treeSummary.includes(".env"));
 });
 
 test("missing README does not fail", async () => {
@@ -87,14 +91,22 @@ test("missing README does not fail", async () => {
   await fs.rm(emptyDir, { recursive: true, force: true });
 });
 
-test("formatProjectContextForPrompt returns compact text", async () => {
+test("formatProjectContextForPrompt returns compact Needle context text", async () => {
   const ctx = await buildProjectContext({ cwd: tempDir });
   const text = formatProjectContextForPrompt(ctx);
   assert.ok(text.includes("Project Context:"));
   assert.ok(text.includes("Package Manager: pnpm"));
-  assert.ok(text.includes("Project Type: TypeScript, React"));
+  assert.ok(text.includes("Project Type: React, Node.js, TypeScript"));
   assert.ok(text.includes("Suggested Commands:"));
   assert.ok(text.includes("- build: pnpm build"));
   assert.ok(text.includes("README Summary:\nHello World"));
   assert.ok(text.includes("Safety Notes:"));
+});
+
+test("detects bun from bun.lock", async () => {
+  const bunDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ctx-bun-"));
+  await fs.writeFile(path.join(bunDir, "bun.lock"), "");
+  const ctx = await buildProjectContext({ cwd: bunDir });
+  assert.equal(ctx.packageManager, "bun");
+  await fs.rm(bunDir, { recursive: true, force: true });
 });
