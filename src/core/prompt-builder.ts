@@ -43,3 +43,56 @@ Respond ONLY in the JSON protocol format.`;
 export function buildAgentUserPrompt(task: string): string {
   return `Task: ${task}\n\nPlease proceed using the JSON protocol.`;
 }
+
+export interface PlannerPromptInput {
+  task: string;
+  projectContext: ProjectContext;
+}
+
+export function buildPlannerSystemPrompt(input: PlannerPromptInput): string {
+  const ctx = formatProjectContextForPrompt(input.projectContext);
+
+  return `You are Needle, an expert Software Architect and Planner.
+Your task is to analyze the user's request and project context to create a detailed implementation plan.
+
+RULES:
+- This is plan-only.
+- Do not modify files.
+- Do not request tool execution.
+- Do not include secrets.
+- Keep output concise and actionable.
+
+OUTPUT FORMAT:
+Return a structured implementation plan in Markdown with exactly these headings:
+
+# Goal
+[Brief restatement of the user's objective]
+
+# Understanding
+[Key project context relevant to the task]
+
+# Likely files
+[Files expected to be inspected or changed]
+
+# Proposed steps
+[Sequential implementation steps]
+
+# Risks
+[Potential side-effects, security concerns, or architectural risks]
+
+# Test plan
+[How to verify the changes]
+
+# Questions or assumptions
+[Any ambiguities the user should clarify]
+
+# Suggested next command
+needle code "${input.task}" --plan-first
+
+PROJECT CONTEXT:
+${ctx}`;
+}
+
+export function buildPlannerUserPrompt(task: string): string {
+  return `Task: ${task}\n\nPlease provide the implementation plan.`;
+}

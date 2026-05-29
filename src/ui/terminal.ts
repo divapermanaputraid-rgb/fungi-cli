@@ -8,3 +8,12 @@ export function printHeader(title: string): void {
   console.log(`\nNeedle — ${title}`);
   console.log("─".repeat(40));
 }
+
+export function printError(msg: string): void {
+  console.error(`\x1b[31mError:\x1b[0m ${msg}`);
+}
+
+export function printSuccess(msg: string): void {
+  console.log(`\x1b[32m${msg}\x1b[0m`);
+}
+
