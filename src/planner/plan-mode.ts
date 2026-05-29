@@ -1,17 +1,79 @@
-// Needle Plan Mode — Sprint 0 placeholder
+import type { ModelProfile, ChatMessage, ChatResponse } from "../providers/types.js";
+import { buildProjectContext } from "../core/context-builder.js";
+import { buildPlannerSystemPrompt, buildPlannerUserPrompt } from "../core/prompt-builder.js";
+import { loadNeedleConfig } from "../config/loader.js";
+import { createProviderRouter } from "../providers/router.js";
 
-export interface PlanMode {
-  generatePlan(prompt: string): Promise<string>;
-  executePlan(): Promise<void>;
+export interface PlanModeOptions {
+  cwd: string;
+  task: string;
+  profile?: ModelProfile;
+  providerChat?: (messages: ChatMessage[]) => Promise<ChatResponse>;
+  dryRun?: boolean;
 }
 
-// TODO: Sprint 1 — structured planning loop
-export class NeedlePlanMode implements PlanMode {
-  async generatePlan(_prompt: string): Promise<string> {
-    throw new Error("NeedlePlanMode.generatePlan() not yet implemented — Sprint 1");
-  }
+export interface PlanModeResult {
+  ok: boolean;
+  plan: string;
+  profile: ModelProfile;
+  usedProvider: boolean;
+  error?: string;
+}
 
-  async executePlan(): Promise<void> {
-    throw new Error("NeedlePlanMode.executePlan() not yet implemented — Sprint 1");
+export async function runPlanMode(options: PlanModeOptions): Promise<PlanModeResult> {
+  const profile: ModelProfile = options.profile || "planner";
+  const usedProvider = !options.dryRun && !options.providerChat;
+
+  try {
+    const config = await loadNeedleConfig(options.cwd);
+    
+    // Build project context
+    const projectContext = await buildProjectContext({ cwd: options.cwd });
+
+    // Build planner prompts
+    const systemPrompt = buildPlannerSystemPrompt({
+      task: options.task,
+      projectContext,
+    });
+    const userPrompt = buildPlannerUserPrompt(options.task);
+
+    const messages: ChatMessage[] = [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt },
+    ];
+
+    let plan = "";
+
+    if (options.dryRun) {
+      plan = "Dry run: Prompt built successfully, but provider was not called.";
+    } else if (options.providerChat) {
+      // Used in tests
+      const response = await options.providerChat(messages);
+      plan = response.content;
+    } else {
+      // Use real provider router
+      const router = createProviderRouter(config);
+      const response = await router.chatWithProfile({
+        profile,
+        messages,
+      });
+      plan = response.content;
+    }
+
+    return {
+      ok: true,
+      plan,
+      profile,
+      usedProvider,
+    };
+  } catch (error: any) {
+    // Return clean result for missing/invalid provider/api key without stack trace
+    return {
+      ok: false,
+      plan: "",
+      profile,
+      usedProvider,
+      error: error instanceof Error ? error.message : String(error)
+    };
   }
 }
