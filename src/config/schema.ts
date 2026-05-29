@@ -7,7 +7,7 @@ export const ProviderConfigSchema = z.object({
 });
 
 export const NeedleConfigSchema = z.object({
-  defaultProvider: z.string().default('nine-router'),
+  defaultProvider: z.string().default('9router'),
   models: z.object({
     fast: z.string().default(''),
     smart: z.string().default(''),
@@ -28,7 +28,8 @@ export const NeedleConfigSchema = z.object({
 });
 
 export const DEFAULT_PROVIDER_CONFIGS: Record<string, ResolvedProviderConfig> = {
-  "nine-router": { baseUrl: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_API_KEY" },
+  "9router": { baseUrl: "", apiKeyEnv: "NINE_ROUTER_API_KEY" },
+  "openrouter": { baseUrl: "https://openrouter.ai/api/v1", apiKeyEnv: "OPENROUTER_API_KEY" },
   "openai-compatible": { baseUrl: "", apiKeyEnv: "OPENAI_API_KEY" },
   "gemini": { apiKeyEnv: "GEMINI_API_KEY" },
   "deepseek": { baseUrl: "https://api.deepseek.com", apiKeyEnv: "DEEPSEEK_API_KEY" },

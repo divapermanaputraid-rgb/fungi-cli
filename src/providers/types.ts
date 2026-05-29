@@ -1,5 +1,6 @@
 export type ProviderId =
-  | "nine-router"
+  | "9router"
+  | "openrouter"
   | "openai-compatible"
   | "gemini"
   | "deepseek";

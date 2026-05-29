@@ -1,7 +1,8 @@
 import type { Provider, ProviderId, ModelProfile, ChatMessage, ChatResponse } from './types';
 import type { NeedleConfig } from '../config/schema';
 import { resolveModelProfile, resolveProviderConfig } from '../config/loader';
-import { createNineRouter } from './nine-router';
+import { createNineRouter } from './9router';
+import { createOpenRouter } from './openrouter';
 import { createOpenAICompatible } from './openai-compatible';
 import { createGemini } from './gemini';
 import { createDeepSeek } from './deepseek';
@@ -28,7 +29,8 @@ export class ProviderRouter {
   }
 
   private registerProviders() {
-    this.providers.set('nine-router', createNineRouter(this.config));
+    this.providers.set('9router', createNineRouter(this.config));
+    this.providers.set('openrouter', createOpenRouter(this.config));
     this.providers.set('openai-compatible', createOpenAICompatible(this.config));
     this.providers.set('gemini', createGemini(this.config));
     this.providers.set('deepseek', createDeepSeek(this.config));

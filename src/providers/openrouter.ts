@@ -2,10 +2,10 @@ import type { Provider, ChatRequest, ChatResponse } from './types';
 import type { NeedleConfig } from '../config/schema';
 import { resolveProviderConfig } from '../config/loader';
 
-export function createNineRouter(config: NeedleConfig): Provider {
+export function createOpenRouter(config: NeedleConfig): Provider {
   return {
-    id: 'nine-router',
-    displayName: 'Nine Router',
+    id: 'openrouter',
+    displayName: 'OpenRouter',
     supports: {
       streaming: true,
       toolCalling: true,
@@ -14,7 +14,7 @@ export function createNineRouter(config: NeedleConfig): Provider {
       longContext: true,
     },
     async chat(request: ChatRequest): Promise<ChatResponse> {
-      const providerConfig = resolveProviderConfig(config, 'nine-router');
+      const providerConfig = resolveProviderConfig(config, 'openrouter');
       const apiKey = process.env[providerConfig.apiKeyEnv];
       if (!apiKey) {
         throw new Error(`Missing API key. Set ${providerConfig.apiKeyEnv}.`);
@@ -38,14 +38,14 @@ export function createNineRouter(config: NeedleConfig): Provider {
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`Nine Router API error: ${res.status} - ${text}`);
+        throw new Error(`OpenRouter API error: ${res.status} - ${text}`);
       }
 
       const data = await res.json() as any;
       return {
         content: data.choices[0].message.content,
         model: request.model,
-        provider: 'nine-router',
+        provider: 'openrouter',
         usage: data.usage ? {
           inputTokens: data.usage.prompt_tokens,
           outputTokens: data.usage.completion_tokens,
