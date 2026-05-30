@@ -109,3 +109,50 @@ export async function readRecentSessions(
     return [];
   }
 }
+
+export async function findSessionById(
+  cwd: string,
+  idOrPrefix: string
+): Promise<{
+  match?: SessionRecord;
+  matches: SessionRecord[];
+}> {
+  try {
+    const filePath = path.join(cwd, ".needle", "sessions", "runs.jsonl");
+    const content = await fs.readFile(filePath, "utf-8");
+
+    const lines = content.split("\n").filter(line => line.trim().length > 0);
+    const matches: SessionRecord[] = [];
+    let exactMatch: SessionRecord | undefined;
+
+    // Parse from end (newest first)
+    for (let i = lines.length - 1; i >= 0; i--) {
+      try {
+        const record = JSON.parse(lines[i]) as SessionRecord;
+        if (record && typeof record === "object" && record.id) {
+          if (record.id === idOrPrefix && !exactMatch) {
+            exactMatch = record;
+          }
+          if (record.id.startsWith(idOrPrefix)) {
+            matches.push(record);
+          }
+        }
+      } catch (err) {
+        // ignore malformed lines
+      }
+    }
+
+    if (exactMatch) {
+      return { match: exactMatch, matches };
+    }
+
+    if (matches.length === 1) {
+      return { match: matches[0], matches };
+    }
+
+    return { matches };
+  } catch (error) {
+    // File might not exist
+    return { matches: [] };
+  }
+}

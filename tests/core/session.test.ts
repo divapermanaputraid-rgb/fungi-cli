@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { appendSessionRecord, readRecentSessions, redactSessionText, SessionRecord } from "../../src/core/session.js";
+import { appendSessionRecord, readRecentSessions, findSessionById, redactSessionText, SessionRecord } from "../../src/core/session.js";
 
 test("session logging", async (t) => {
   const setupTempDir = async () => {
@@ -127,5 +127,54 @@ test("session logging", async (t) => {
     
     // Cleanup so it can be deleted
     await fs.chmod(dirPath, 0o755);
+  });
+
+  await t.test("findSessionById", async () => {
+    const cwd = await setupTempDir();
+
+    const record1: SessionRecord = {
+      id: "run-abc-123",
+      createdAt: new Date("2024-01-01T10:00:00Z").toISOString(),
+      mode: "code",
+      task: "first task",
+      cwd,
+      status: "success",
+      durationMs: 100,
+      summary: "First summary",
+    };
+
+    const record2: SessionRecord = {
+      id: "run-abc-456",
+      createdAt: new Date("2024-01-01T11:00:00Z").toISOString(),
+      mode: "plan",
+      task: "second task",
+      cwd,
+      status: "failure",
+      durationMs: 200,
+      summary: "Second summary",
+    };
+
+    await appendSessionRecord(cwd, record1);
+    await appendSessionRecord(cwd, record2);
+
+    // Exact match
+    const res1 = await findSessionById(cwd, "run-abc-123");
+    assert.ok(res1.match);
+    assert.equal(res1.match.id, "run-abc-123");
+
+    // Prefix match (unique)
+    const res2 = await findSessionById(cwd, "run-abc-4");
+    assert.ok(res2.match);
+    assert.equal(res2.match.id, "run-abc-456");
+
+    // Ambiguous prefix
+    const res3 = await findSessionById(cwd, "run-abc");
+    assert.equal(res3.match, undefined);
+    assert.equal(res3.matches.length, 2);
+
+    // No match
+    const res4 = await findSessionById(cwd, "missing");
+    assert.equal(res4.match, undefined);
+    assert.equal(res4.matches.length, 0);
   });
 });
