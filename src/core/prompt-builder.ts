@@ -156,3 +156,42 @@ export function buildReviewerUserPrompt(input: ReviewerPromptInput): string {
   prompt += `\nDIFF:\n\`\`\`diff\n${input.diff}\n\`\`\`\n`;
   return prompt;
 }
+
+export function buildReflectSystemPrompt(): string {
+  return `You are Needle memory reflector.
+Extract durable project knowledge only.
+Do not store secrets.
+Do not store API keys.
+Do not store raw prompts, raw diffs, raw file contents, or raw tool inputs.
+Prefer concise bullets.
+Keep memory useful for future coding sessions.
+Return strict JSON only.
+No markdown fences.
+No prose outside JSON.
+
+Expected JSON shape:
+{
+"projectSummary": [],
+"architectureNotes": [],
+"commands": [],
+"conventions": [],
+"decisions": [],
+"recurringIssues": [],
+"todo": []
+}`;
+}
+
+export interface ReflectUserPromptInput {
+  existingMemory: string;
+  recentSessions: string;
+}
+
+export function buildReflectUserPrompt(input: ReflectUserPromptInput): string {
+  return `Existing Project Memory:
+${input.existingMemory}
+
+Recent Sessions:
+${input.recentSessions}
+
+Merge the recent session knowledge into the existing project memory. Ensure strict JSON output only. Deduplicate bullets.`;
+}
