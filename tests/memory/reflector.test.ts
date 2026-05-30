@@ -132,3 +132,179 @@ test("Reflector - Last Reflected is updated", async () => {
   const d = new Date(result.lastReflected);
   assert.ok(!isNaN(d.getTime()));
 });
+
+test("Reflector LLM - missing providerChat returns clean failure", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ref-test-"));
+  
+  await createTempSession(tmpDir, [{
+    id: "s1",
+    timestamp: new Date().toISOString(),
+    task: "Add auth",
+    mode: "plan",
+    summary: "- Decided to use JWT"
+  }]);
+  
+  const result = await runReflect({ cwd: tmpDir, llm: true });
+  assert.ok(!result.ok);
+  assert.match(result.summary, /providerChat missing/);
+  
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
+
+test("Reflector LLM - parses valid JSON and updates memory", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ref-test-"));
+  
+  await createTempSession(tmpDir, [{
+    id: "s1",
+    timestamp: new Date().toISOString(),
+    task: "Add auth",
+    mode: "plan",
+    summary: "- Decided to use JWT"
+  }]);
+  
+  const mockProviderChat = async (messages: any[]) => {
+    // Redaction check: ensure secrets are stripped before hitting mock
+    const hasSecret = JSON.stringify(messages).includes("sk-ant-api");
+    assert.ok(!hasSecret, "Secret leaked to provider!");
+
+    return {
+      content: JSON.stringify({
+        projectSummary: [],
+        architectureNotes: [],
+        commands: [],
+        conventions: [],
+        decisions: ["LLM decided to use JWT"],
+        recurringIssues: [],
+        todo: []
+      }),
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 }
+    };
+  };
+
+  const result = await runReflect({ 
+    cwd: tmpDir, 
+    llm: true, 
+    providerChat: mockProviderChat 
+  });
+
+  assert.ok(result.ok);
+  assert.match(result.summary, /LLM-assisted/);
+
+  const mem = await readProjectMemory(tmpDir);
+  assert.ok(mem.decisions.includes("LLM decided to use JWT"));
+  
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
+
+test("Reflector LLM - invalid JSON returns clean failure and fallback deterministic does not run", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ref-test-"));
+  
+  await createTempSession(tmpDir, [{
+    id: "s1",
+    timestamp: new Date().toISOString(),
+    task: "Add auth",
+    mode: "plan",
+    summary: "- Decided to use JWT"
+  }]);
+  
+  const mockProviderChat = async (messages: any[]) => {
+    return {
+      content: "This is not JSON",
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 }
+    };
+  };
+
+  const result = await runReflect({ 
+    cwd: tmpDir, 
+    llm: true, 
+    providerChat: mockProviderChat 
+  });
+
+  assert.ok(!result.ok);
+  assert.match(result.summary, /LLM reflection failed/);
+  
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
+
+test("Reflector LLM - redacts secrets before provider input", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ref-test-"));
+  
+  await createTempSession(tmpDir, [{
+    id: "s1",
+    timestamp: new Date().toISOString(),
+    task: "Use key sk-ant-api03-abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890-abcdef",
+    mode: "code",
+    summary: "Created the secret sk-ant-api03-abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890-abcdef"
+  }]);
+  
+  let promptSent = "";
+  const mockProviderChat = async (messages: any[]) => {
+    promptSent = JSON.stringify(messages);
+    return {
+      content: JSON.stringify({
+        projectSummary: [],
+        architectureNotes: [],
+        commands: [],
+        conventions: [],
+        decisions: [],
+        recurringIssues: [],
+        todo: []
+      }),
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 }
+    };
+  };
+
+  const result = await runReflect({ 
+    cwd: tmpDir, 
+    llm: true, 
+    providerChat: mockProviderChat 
+  });
+
+  assert.ok(result.ok);
+  assert.match(promptSent, /\*\*\*/);
+  assert.doesNotMatch(promptSent, /abcdef1234567890/);
+  
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
+
+test("Reflector LLM - dry-run does not write MEMORY.md", async () => {
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "needle-ref-test-"));
+  
+  await createTempSession(tmpDir, [{
+    id: "s1",
+    timestamp: new Date().toISOString(),
+    task: "Add auth",
+    mode: "plan",
+    summary: "- Decided to use JWT"
+  }]);
+  
+  const mockProviderChat = async (messages: any[]) => {
+    return {
+      content: JSON.stringify({
+        projectSummary: [],
+        architectureNotes: [],
+        commands: [],
+        conventions: [],
+        decisions: ["LLM decided to use JWT"],
+        recurringIssues: [],
+        todo: []
+      }),
+      usage: { promptTokens: 10, completionTokens: 10, totalTokens: 20 }
+    };
+  };
+
+  const result = await runReflect({ 
+    cwd: tmpDir, 
+    llm: true, 
+    dryRun: true,
+    providerChat: mockProviderChat 
+  });
+
+  assert.ok(result.ok);
+  assert.ok(result.dryRun);
+
+  const memPath = path.join(tmpDir, ".needle", "MEMORY.md");
+  await assert.rejects(fs.stat(memPath)); // Should not exist
+  
+  await fs.rm(tmpDir, { recursive: true, force: true });
+});
