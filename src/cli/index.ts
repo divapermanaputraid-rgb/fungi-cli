@@ -10,6 +10,7 @@ import { configCommand } from "./commands/config.js";
 import { modelsCommand } from "./commands/models.js";
 import { toolsCommand } from "./commands/tools.js";
 import { sessionsCommand } from "./commands/sessions.js";
+import { reflectCommand } from "./commands/reflect.js";
 
 const program = new Command();
 
@@ -27,5 +28,6 @@ program.addCommand(configCommand);
 program.addCommand(modelsCommand);
 program.addCommand(toolsCommand);
 program.addCommand(sessionsCommand());
+program.addCommand(reflectCommand());
 
 program.parse(process.argv);
