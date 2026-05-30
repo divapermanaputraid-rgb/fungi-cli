@@ -47,6 +47,14 @@ describe("Plan Mode", () => {
     assert.ok(receivedMessages[0].content.includes("This is plan-only"));
     assert.equal(receivedMessages[1].role, "user");
     assert.ok(receivedMessages[1].content.includes("add login form"));
+
+    const sessionsRaw = await fs.readFile(path.join(dummyCwd, ".needle", "sessions", "runs.jsonl"), "utf-8");
+    const sessions = sessionsRaw.trim().split("\n").map(l => JSON.parse(l));
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].mode, "plan");
+    assert.equal(sessions[0].task, "add login form");
+    assert.equal(sessions[0].status, "success");
+    assert.ok(sessions[0].summary.includes("Goal: add login"));
   });
 
   test("dry-run skips provider", async () => {
